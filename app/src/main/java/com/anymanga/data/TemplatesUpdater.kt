@@ -33,20 +33,31 @@ class TemplatesUpdater(
      * Verified by ETag and SHA256.
      * @return TemplatesIndex if updated or loaded from cache, null if no update needed or error.
      */
+    /**
+     * Updates the local templates if a newer version is available.
+     * Verified by ETag and SHA256.
+     * @return TemplatesIndex if updated or loaded from cache, null if no update needed or error.
+     */
     suspend fun updateTemplates(): TemplatesIndex? {
         val repoUrl = preferencesManager.userRepoUrl.first()
+        android.util.Log.d("TemplatesUpdater", "Update requested. Repo URL: $repoUrl")
+        
         if (repoUrl.isNullOrBlank()) {
-             // No repository configured by user yet
+             android.util.Log.e("TemplatesUpdater", "No repository URL configured")
              return null
         }
         
         val templatesUrl = repoUrl
-        val sha256Url = "$repoUrl.sha256"
+        val sha256Url = "$repoUrl.sha256?t=${System.currentTimeMillis()}"
 
         val currentEtag = preferencesManager.getTemplatesEtag()
         
         // 1. Fetch SHA256 first for integrity check later
-        val expectedSha256 = fetchRemoteSha256(sha256Url) ?: return null
+        val expectedSha256 = fetchRemoteSha256(sha256Url)
+        if (expectedSha256 == null) {
+            android.util.Log.e("TemplatesUpdater", "Failed to fetch SHA256 from $sha256Url")
+            return null
+        }
 
         // 2. Fetch Templates with ETag
         val request = Request.Builder()
@@ -58,37 +69,84 @@ class TemplatesUpdater(
             }
             .build()
 
-        client.newCall(request).execute().use { response ->
-            if (response.code == 304) {
-                // No update needed based on ETag
-                return null
-            }
+        return try {
+            client.newCall(request).execute().use { response ->
+                android.util.Log.d("TemplatesUpdater", "Fetch response: ${response.code}")
+                
+                if (response.code == 304) {
+                    android.util.Log.d("TemplatesUpdater", "Templates up to date (304 Not Modified)")
+                    return getLocalTemplates() // Return local if not modified
+                }
 
-            if (!response.isSuccessful) {
-                return null
-            }
+                if (!response.isSuccessful) {
+                    android.util.Log.e("TemplatesUpdater", "Fetch failed with code: ${response.code}")
+                    return null
+                }
 
-            val body = response.body ?: return null
-            val etag = response.header("ETag")
-            
-            // 3. Verify Integrity
-            val bytes = body.bytes()
-            if (!verifySha256(bytes, expectedSha256)) {
-                // Integrity check failed!
-                return null
-            }
+                val body = response.body ?: return null
+                val etag = response.header("ETag")
+                
+                // 3. Verify Integrity
+                val bytes = body.bytes()
+                if (!verifySha256(bytes, expectedSha256)) {
+                    android.util.Log.e("TemplatesUpdater", "SHA256 mismatch! integrity check failed.")
+                    return null
+                }
 
-            // 4. Parse and Save
-            return try {
+                // 4. Parse and Save
                 val index = json.decodeFromString<TemplatesIndex>(String(bytes))
+                android.util.Log.d("TemplatesUpdater", "Parsed ${index.count} templates successfully")
                 saveTemplatesToLocal(bytes)
                 if (etag != null) {
                     preferencesManager.saveTemplatesEtag(etag)
                 }
                 index
-            } catch (e: Exception) {
-                null
             }
+        } catch (e: Exception) {
+            android.util.Log.e("TemplatesUpdater", "Exception during update: ${e.message}", e)
+            null
+        }
+    }
+
+    /**
+     * Downloads templates and populates the Room database.
+     */
+    suspend fun syncWithDatabase(database: AppDatabase): Boolean {
+        android.util.Log.d("TemplatesUpdater", "Starting syncWithDatabase...")
+        val index = updateTemplates() ?: getLocalTemplates() 
+        
+        if (index == null) {
+            android.util.Log.e("TemplatesUpdater", "Failed to get templates (update failed and no local cache)")
+            return false
+        }
+        
+        return try {
+            android.util.Log.d("TemplatesUpdater", "Mapping ${index.templates.size} templates to entities...")
+            val entities = index.templates.map { template ->
+                SourceTemplateEntity(
+                    id = template.id,
+                    name = template.name,
+                    domain = template.domain,
+                    baseUrl = template.baseUrl,
+                    engineType = template.engineType,
+                    lang = template.lang,
+                    isNsfw = template.isNsfw,
+                    hasCloudflare = template.hasCloudflare,
+                    isDead = template.isDead,
+                    lastUpdate = System.currentTimeMillis()
+                )
+            }
+            database.sourceDao().upsertTemplates(entities)
+            android.util.Log.d("TemplatesUpdater", "Inserted ${entities.size} templates into DB")
+            
+            // Optional: Cleanup old templates not in the new index
+            if (entities.isNotEmpty()) {
+                database.sourceDao().deleteOldTemplates(entities.map { it.id })
+            }
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("TemplatesUpdater", "Database sync failed: ${e.message}", e)
+            false
         }
     }
 

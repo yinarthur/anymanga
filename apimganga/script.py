@@ -377,7 +377,7 @@ def main() -> int:
     etag_path = os.path.join(args.cache_dir, "etag.json")
     version_path = os.path.join(args.cache_dir, "version.json")
 
-    etag_cache = load_etag_cache(etag_path)
+    etag_cache = {} # load_etag_cache(etag_path)
 
     try:
         result = fetch_index(INDEX_URLS, etag_cache)
@@ -423,13 +423,19 @@ def main() -> int:
         templates_sha,
     )
 
-    _, min_path = write_outputs(output_payload, args.outdir)
+    pretty_path, min_path = write_outputs(output_payload, args.outdir)
+    
+    # Minified SHA256
     with open(min_path, "rb") as handle:
         actual_min_sha = sha256_hex(handle.read())
-
-    checksum_path = os.path.join(args.outdir, "templates.min.json.sha256")
-    with open(checksum_path, "w", encoding="utf-8") as handle:
+    with open(os.path.join(args.outdir, "templates.min.json.sha256"), "w", encoding="utf-8") as handle:
         handle.write(actual_min_sha)
+
+    # Pretty SHA256
+    with open(pretty_path, "rb") as handle:
+        actual_pretty_sha = sha256_hex(handle.read())
+    with open(os.path.join(args.outdir, "templates.json.sha256"), "w", encoding="utf-8") as handle:
+        handle.write(actual_pretty_sha)
 
     version_output = os.path.join(args.outdir, "version.json")
     with open(version_output, "w", encoding="utf-8") as handle:
