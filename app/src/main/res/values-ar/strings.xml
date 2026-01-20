@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AnyManga</string>
+    <string name="library">المكتبة</string>
+    <string name="updates">التحديثات</string>
+    <string name="history">السجل</string>
+    <string name="browse">تصفح</string>
+    <string name="more">المزيد</string>
+    <string name="settings">الإعدادات</string>
+    <string name="history_empty">لا يوجد سجل بعد</string>
+    <string name="history_clear_all">مسح الكل</string>
+    <string name="details">التفاصيل</string>
+    <string name="read_now">اقرأ الآن</string>
+    <string name="synopsis">القصة</string>
+    <string name="genres">التصنيفات</string>
+    <string name="language">اللغة</string>
+    <string name="theme">المظهر</string>
+    <string name="general">عام</string>
+    <string name="appearance">المظهر</string>
+    <string name="reader">القارئ</string>
+    <string name="downloads">التنزيلات</string>
+    <string name="backup_restore">النسخ الاحتياطي والاستعادة</string>
+    <string name="advanced">متقدم</string>
+    <string name="about">حول</string>
+</resources>
