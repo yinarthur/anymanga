@@ -1,0 +1,478 @@
+[
+  {
+    "id": "8600626646399125374",
+    "name": "Akuma",
+    "baseUrl": "https://akuma.moe",
+    "extensionName": "Tachiyomi: Akuma",
+    "pkg": "eu.kanade.tachiyomi.extension.all.akuma"
+  },
+  {
+    "id": "3744905183009204736",
+    "name": "Dragon Ball Multiverse",
+    "baseUrl": "https://www.dragonball-multiverse.com",
+    "extensionName": "Tachiyomi: Dragon Ball Multiverse",
+    "pkg": "eu.kanade.tachiyomi.extension.all.dragonballmultiverse"
+  },
+  {
+    "id": "1187989220698209376",
+    "name": "GlobalComix",
+    "baseUrl": "https://globalcomix.com",
+    "extensionName": "Tachiyomi: GlobalComix",
+    "pkg": "eu.kanade.tachiyomi.extension.all.globalcomix"
+  },
+  {
+    "id": "1533969146563051444",
+    "name": "3Hentai",
+    "baseUrl": "https://3hentai.net",
+    "extensionName": "Tachiyomi: 3Hentai",
+    "pkg": "eu.kanade.tachiyomi.extension.all.hentai3"
+  },
+  {
+    "id": "5494684486943087247",
+    "name": "HentaiHand",
+    "baseUrl": "https://hentaihand.com",
+    "extensionName": "Tachiyomi: HentaiHand",
+    "pkg": "eu.kanade.tachiyomi.extension.all.hentaihand"
+  },
+  {
+    "id": "6776904750010591906",
+    "name": "Hitomi",
+    "baseUrl": "https://hitomi.la",
+    "extensionName": "Tachiyomi: Hitomi",
+    "pkg": "eu.kanade.tachiyomi.extension.all.hitomi"
+  },
+  {
+    "id": "5763592680824441822",
+    "name": "Manga Ball",
+    "baseUrl": "https://mangaball.net",
+    "extensionName": "Tachiyomi: Manga Ball",
+    "pkg": "eu.kanade.tachiyomi.extension.all.mangaball"
+  },
+  {
+    "id": "3339599426223341161",
+    "name": "MangaDex",
+    "baseUrl": "https://mangadex.org",
+    "extensionName": "Tachiyomi: MangaDex",
+    "pkg": "eu.kanade.tachiyomi.extension.all.mangadex"
+  },
+  {
+    "id": "1886485150961526021",
+    "name": "MangaPark",
+    "baseUrl": "https://mangapark.net",
+    "extensionName": "Tachiyomi: MangaPark",
+    "pkg": "eu.kanade.tachiyomi.extension.all.mangapark"
+  },
+  {
+    "id": "797946349800265191",
+    "name": "Manhuarm",
+    "baseUrl": "https://manhuarmtl.com",
+    "extensionName": "Tachiyomi: Manhuarm",
+    "pkg": "eu.kanade.tachiyomi.extension.all.manhuarm"
+  },
+  {
+    "id": "4864082317433034574",
+    "name": "MyReadingManga",
+    "baseUrl": "https://myreadingmanga.info",
+    "extensionName": "Tachiyomi: MyReadingManga",
+    "pkg": "eu.kanade.tachiyomi.extension.all.myreadingmanga"
+  },
+  {
+    "id": "7830959603474646022",
+    "name": "NamiComi",
+    "baseUrl": "https://namicomi.com",
+    "extensionName": "Tachiyomi: NamiComi",
+    "pkg": "eu.kanade.tachiyomi.extension.all.namicomi"
+  },
+  {
+    "id": "1773653553472615327",
+    "name": "nHentai.com (unoriginal)",
+    "baseUrl": "https://nhentai.com",
+    "extensionName": "Tachiyomi: nHentai.com (unoriginal)",
+    "pkg": "eu.kanade.tachiyomi.extension.all.nhentaicom"
+  },
+  {
+    "id": "6895465518314218980",
+    "name": "PandaChaika",
+    "baseUrl": "https://panda.chaika.moe",
+    "extensionName": "Tachiyomi: PandaChaika",
+    "pkg": "eu.kanade.tachiyomi.extension.all.pandachaika"
+  },
+  {
+    "id": "8205252065972088770",
+    "name": "The Library of Ohara",
+    "baseUrl": "https://thelibraryofohara.com",
+    "extensionName": "Tachiyomi: The Library of Ohara",
+    "pkg": "eu.kanade.tachiyomi.extension.all.thelibraryofohara"
+  },
+  {
+    "id": "3209001028102012989",
+    "name": "Lava Scans",
+    "baseUrl": "https://lavatoons.com",
+    "extensionName": "Tachiyomi: Thunder Scans",
+    "pkg": "eu.kanade.tachiyomi.extension.all.thunderscans"
+  },
+  {
+    "id": "9095569612750018806",
+    "name": "Webtoons.com Translations",
+    "baseUrl": "https://translate.webtoons.com",
+    "extensionName": "Tachiyomi: Webtoons.com Translations",
+    "pkg": "eu.kanade.tachiyomi.extension.all.webtoonstranslate"
+  },
+  {
+    "id": "3377124583725332473",
+    "name": "WeebDex",
+    "baseUrl": "https://weebdex.org",
+    "extensionName": "Tachiyomi: WeebDex",
+    "pkg": "eu.kanade.tachiyomi.extension.all.weebdex"
+  },
+  {
+    "id": "9170389107417152397",
+    "name": "YSK Comics",
+    "baseUrl": "https://www.ysk-comics.com",
+    "extensionName": "Tachiyomi: YSK Comics",
+    "pkg": "eu.kanade.tachiyomi.extension.all.yskcomics"
+  },
+  {
+    "id": "3472625749271868375",
+    "name": "هنتاي العرب",
+    "baseUrl": "https://arabshentai.com",
+    "extensionName": "Tachiyomi: Arabs Hentai",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.arabshentai"
+  },
+  {
+    "id": "2424761902286195560",
+    "name": "عرب تونز",
+    "baseUrl": "https://arabtoons.net",
+    "extensionName": "Tachiyomi: Arab Toons",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.arabtoons"
+  },
+  {
+    "id": "8112280317896333809",
+    "name": "أريا مانجا",
+    "baseUrl": "https://ar.kenmanga.com",
+    "extensionName": "Tachiyomi: Area Manga",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.areamanga"
+  },
+  {
+    "id": "241593018172482505",
+    "name": "Area Scans",
+    "baseUrl": "https://ar.areascans.org",
+    "extensionName": "Tachiyomi: Area Scans",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.areascans"
+  },
+  {
+    "id": "2482399499047903203",
+    "name": "Azora",
+    "baseUrl": "https://azoramoon.com",
+    "extensionName": "Tachiyomi: Azora",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.azora"
+  },
+  {
+    "id": "6404296554681042513",
+    "name": "Umi Manga",
+    "baseUrl": "https://www.umimanga.com",
+    "extensionName": "Tachiyomi: Umi Manga",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.beastscans"
+  },
+  {
+    "id": "5952392608448542590",
+    "name": "Hadess",
+    "baseUrl": "https://www.hadess.xyz",
+    "extensionName": "Tachiyomi: Hadess",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.crowscans"
+  },
+  {
+    "id": "5702082694566979718",
+    "name": "شبكة كونان العربية",
+    "baseUrl": "https://manga.detectiveconanar.com",
+    "extensionName": "Tachiyomi: Detective Conan Ar",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.detectiveconanar"
+  },
+  {
+    "id": "6272541812251031526",
+    "name": "Dilar",
+    "baseUrl": "https://dilar.tube#, https://golden.rest",
+    "extensionName": "Tachiyomi: Dilar",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.dilar"
+  },
+  {
+    "id": "2655166136445570124",
+    "name": "Empire Webtoon",
+    "baseUrl": "https://webtoonempire-ron.com",
+    "extensionName": "Tachiyomi: Empire Webtoon",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.empirewebtoon"
+  },
+  {
+    "id": "1383489648660567366",
+    "name": "هنتاي سلاير",
+    "baseUrl": "https://hentaislayer.net",
+    "extensionName": "Tachiyomi: Hentai Slayer",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.hentaislayer"
+  },
+  {
+    "id": "917436262447415426",
+    "name": "Hijala",
+    "baseUrl": "https://hijala.com",
+    "extensionName": "Tachiyomi: Hijala",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.hijala"
+  },
+  {
+    "id": "230017529540228175",
+    "name": "ARESManga",
+    "baseUrl": "https://fl-ares.com",
+    "extensionName": "Tachiyomi: ARESManga",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.iimanga"
+  },
+  {
+    "id": "323105186892383931",
+    "name": "Loner Translations",
+    "baseUrl": "https://loner-tl.blogspot.com",
+    "extensionName": "Tachiyomi: Loner Translations",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.lonertranslations"
+  },
+  {
+    "id": "1073624495230267708",
+    "name": "مانجا العاشق",
+    "baseUrl": "https://3asq.org",
+    "extensionName": "Tachiyomi: 3asq",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.manga3asq"
+  },
+  {
+    "id": "7109397520501699498",
+    "name": "Manga Ai Land",
+    "baseUrl": "https://manga-ai-land.blogspot.com",
+    "extensionName": "Tachiyomi: Manga Ai Land",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangaailand"
+  },
+  {
+    "id": "9160891278578525988",
+    "name": "MangaHub",
+    "baseUrl": "https://www.mangaxhentai.com",
+    "extensionName": "Tachiyomi: MangaHub",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangahub"
+  },
+  {
+    "id": "918460697583900080",
+    "name": "مانجا ليك",
+    "baseUrl": "https://lekmanga.net#, https://lekmanga.org#, https://like-manga.net#, https://lekmanga.com#, https://manga-leko.org",
+    "extensionName": "Tachiyomi: Mangalek",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangalek"
+  },
+  {
+    "id": "3568795724496898351",
+    "name": "مانجا لينك",
+    "baseUrl": "https://link-manga.com",
+    "extensionName": "Tachiyomi: Mangalink",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangalink"
+  },
+  {
+    "id": "2589550143244611118",
+    "name": "MangaLionz",
+    "baseUrl": "https://manga-lionz.com",
+    "extensionName": "Tachiyomi: MangaLionz",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangalionz"
+  },
+  {
+    "id": "4230561864524668567",
+    "name": "MangaPeak",
+    "baseUrl": "https://mangapeak.org",
+    "extensionName": "Tachiyomi: MangaPeak",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangapeak"
+  },
+  {
+    "id": "1250466030789918250",
+    "name": "Manga Pro",
+    "baseUrl": "https://promanga.net",
+    "extensionName": "Tachiyomi: Manga Pro",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangapro"
+  },
+  {
+    "id": "909469885483358759",
+    "name": "MangaRabic",
+    "baseUrl": "https://mangarabic.com",
+    "extensionName": "Tachiyomi: MangaRabic",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangarabic"
+  },
+  {
+    "id": "7107091939235823176",
+    "name": "Manga Rose",
+    "baseUrl": "https://mangarose.net",
+    "extensionName": "Tachiyomi: Manga Rose",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangarose"
+  },
+  {
+    "id": "7724201714458008379",
+    "name": "Manga Soul",
+    "baseUrl": "https://www.manga-soul.com",
+    "extensionName": "Tachiyomi: Manga Soul",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangasoul"
+  },
+  {
+    "id": "2436176998646301840",
+    "name": "MangaSpark",
+    "baseUrl": "https://manga-spark.net",
+    "extensionName": "Tachiyomi: MangaSpark",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangaspark"
+  },
+  {
+    "id": "6058166507489091982",
+    "name": "Manga Starz",
+    "baseUrl": "https://manga-starz.net",
+    "extensionName": "Tachiyomi: Manga Starz",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangastarz"
+  },
+  {
+    "id": "7657007209499352344",
+    "name": "MangaSwat",
+    "baseUrl": "https://appswat.com",
+    "extensionName": "Tachiyomi: MangaSwat",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangaswat"
+  },
+  {
+    "id": "5218550345649535189",
+    "name": "Manga Tales",
+    "baseUrl": "https://www.mangatales.com",
+    "extensionName": "Tachiyomi: Manga Tales",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangatales"
+  },
+  {
+    "id": "3509183087698743427",
+    "name": "Manga Trend",
+    "baseUrl": "https://mangaatrend.net",
+    "extensionName": "Tachiyomi: Manga Trend",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangatrend"
+  },
+  {
+    "id": "4205255591548488472",
+    "name": "MangaTuk",
+    "baseUrl": "https://mangatuk.com",
+    "extensionName": "Tachiyomi: MangaTuk",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangatuk"
+  },
+  {
+    "id": "9042359004298978629",
+    "name": "Mangax Core",
+    "baseUrl": "https://mangaxcore.xyz",
+    "extensionName": "Tachiyomi: Mangax Core",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.mangaxcore"
+  },
+  {
+    "id": "152314873890577786",
+    "name": "Manhatic",
+    "baseUrl": "https://manhatic.com",
+    "extensionName": "Tachiyomi: Manhatic",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.manhatic"
+  },
+  {
+    "id": "743599002989616408",
+    "name": "Manhatok",
+    "baseUrl": "https://manhatok.blogspot.com",
+    "extensionName": "Tachiyomi: Manhatok",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.manhatok"
+  },
+  {
+    "id": "2102294221965772686",
+    "name": "Niji Translations",
+    "baseUrl": "https://niji-translations.com",
+    "extensionName": "Tachiyomi: Niji Translations",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.nijitranslations"
+  },
+  {
+    "id": "1862668423724227387",
+    "name": "Oduto",
+    "baseUrl": "https://nb19u.blogspot.com",
+    "extensionName": "Tachiyomi: Oduto",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.oduto"
+  },
+  {
+    "id": "6505349724663768497",
+    "name": "Olaoe",
+    "baseUrl": "https://olaoe.cyou",
+    "extensionName": "Tachiyomi: Olaoe",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.olaoe"
+  },
+  {
+    "id": "335499577904379512",
+    "name": "مانجا اون لاين",
+    "baseUrl": "https://onma.me",
+    "extensionName": "Tachiyomi: Onma",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.onma"
+  },
+  {
+    "id": "4957859168133378262",
+    "name": "Paradise BL",
+    "baseUrl": "https://paradise-bl.com",
+    "extensionName": "Tachiyomi: Paradise BL",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.paradisebl"
+  },
+  {
+    "id": "3856301446711562004",
+    "name": "RE Manga",
+    "baseUrl": "https://re-manga.com",
+    "extensionName": "Tachiyomi: RE Manga (Arabic)",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.remangaarabic"
+  },
+  {
+    "id": "3301038340499911137",
+    "name": "Rocks Manga",
+    "baseUrl": "https://rocksmanga.com",
+    "extensionName": "Tachiyomi: Rocks Manga",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.rocksmanga"
+  },
+  {
+    "id": "2102721599186482805",
+    "name": "Scans 4u",
+    "baseUrl": "https://4uscans.com",
+    "extensionName": "Tachiyomi: Scans 4u",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.scans4u"
+  },
+  {
+    "id": "6262106764679184511",
+    "name": "مانجا شقاع",
+    "baseUrl": "https://www.shqqaa.com",
+    "extensionName": "Tachiyomi: Shqqaa Manga",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.shqqaa"
+  },
+  {
+    "id": "2142158598125421915",
+    "name": "StellarSaber",
+    "baseUrl": "https://stellarsaber.pro",
+    "extensionName": "Tachiyomi: StellarSaber",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.stellarsaber"
+  },
+  {
+    "id": "1465075725088176210",
+    "name": "Storm X",
+    "baseUrl": "https://www.stormx.site",
+    "extensionName": "Tachiyomi: Storm X",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.stormx"
+  },
+  {
+    "id": "4110737012647435874",
+    "name": "Team X",
+    "baseUrl": "https://olympustaff.com",
+    "extensionName": "Tachiyomi: Team X",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.teamx"
+  },
+  {
+    "id": "4337506350787725909",
+    "name": "Yokai",
+    "baseUrl": "https://yokai-team.blogspot.com",
+    "extensionName": "Tachiyomi: Yokai",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.yokai"
+  },
+  {
+    "id": "8019959770180418614",
+    "name": "Yona Bar",
+    "baseUrl": "https://yonaber.com",
+    "extensionName": "Tachiyomi: Yona Bar",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.yonabar"
+  },
+  {
+    "id": "7833471811016150678",
+    "name": "Yuri Moon Sub",
+    "baseUrl": "https://yurimoonsub.blogspot.com",
+    "extensionName": "Tachiyomi: Yuri Moon Sub",
+    "pkg": "eu.kanade.tachiyomi.extension.ar.yurimoonsub"
+  }
+]
