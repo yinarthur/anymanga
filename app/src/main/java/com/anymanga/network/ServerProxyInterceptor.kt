@@ -31,6 +31,7 @@ class ServerProxyInterceptor(
         // Prepare the proxy request to our server
         val targetUrl = request.url.toString()
         val serverBaseUrl = serverUrlProvider().removeSuffix("/")
+        // The server base URL from ApiConfig already includes /api/
         val proxyUrl = "$serverBaseUrl/fetch/html"
 
         val json = JSONObject()

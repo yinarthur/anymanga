@@ -15,7 +15,11 @@ object ApiConfig {
      * Call this from Settings when user changes the server URL.
      */
     fun setServerUrl(url: String) {
-        baseUrl = if (url.endsWith("/")) url else "$url/"
+        var normalized = url.trim().removeSuffix("/")
+        if (!normalized.endsWith("/api")) {
+            normalized = "$normalized/api"
+        }
+        baseUrl = "$normalized/"
     }
     
     fun getServerUrl(): String = baseUrl
