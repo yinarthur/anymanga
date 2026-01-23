@@ -40,34 +40,26 @@ enum class ReadingMode {
 fun ReaderScreen(
     chapterUrl: String,
     sourceId: String,
+    viewModelFactory: com.anymanga.viewmodel.ViewModelFactory,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context) }
     
-    var pages by remember { mutableStateOf<List<Page>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
+    val viewModel: com.anymanga.viewmodel.ReaderViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = viewModelFactory)
+    val state by viewModel.state.collectAsState()
+    
     var readingMode by remember { mutableStateOf(ReadingMode.WEBTOON) }
     var showUI by remember { mutableStateOf(true) }
     
-    val pagerState = rememberPagerState(pageCount = { pages.size })
-
     LaunchedEffect(chapterUrl, sourceId) {
-        isLoading = true
-        try {
-            val templates = database.sourceDao().getAllTemplates().first()
-            val template = templates.find { it.id == sourceId }
-            if (template != null) {
-                val engine = EngineRegistry.getEngineForTemplate(template)
-                pages = engine.getPages(template.baseUrl, chapterUrl)
-            }
-        } catch (e: Exception) {
-            // Error handling
-        } finally {
-            isLoading = false
-        }
+        viewModel.loadPages(sourceId, chapterUrl)
     }
+
+    val pages = (state as? com.anymanga.viewmodel.ReaderViewModel.ReaderState.Success)?.pages ?: emptyList()
+    val isLoading = state is com.anymanga.viewmodel.ReaderViewModel.ReaderState.Loading
+    
+    val pagerState = rememberPagerState(pageCount = { pages.size })
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black).clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showUI = !showUI }) {
         if (isLoading) {

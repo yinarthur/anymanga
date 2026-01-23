@@ -113,6 +113,38 @@ router.get('/stats', checkLoaded, (req: Request, res: Response) => {
     res.json(stats);
 });
 
+// Fetch full HTML (useful for the app to parse content via proxy)
+router.post('/fetch/html', async (req: Request, res: Response) => {
+    const { url } = req.body;
+
+    if (!url) {
+        return res.status(400).json({ error: 'URL is required' });
+    }
+
+    try {
+        const html = await new Promise<string>((resolve, reject) => {
+            cloudscraper.get(url, (error: any, response: any, body: string) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(body);
+                }
+            });
+        });
+
+        res.json({
+            success: true,
+            url: url,
+            html: html
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // Test endpoint to fetch manga data
 router.post('/test/fetch', async (req: Request, res: Response) => {
     const { url } = req.body;

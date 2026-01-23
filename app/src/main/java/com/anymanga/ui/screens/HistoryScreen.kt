@@ -32,11 +32,12 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(onMangaClick: (String, String) -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context) }
-    val historyList by database.historyDao().getHistory().collectAsState(initial = emptyList())
+fun HistoryScreen(
+    onMangaClick: (String, String) -> Unit,
+    viewModelFactory: com.anymanga.viewmodel.ViewModelFactory
+) {
+    val viewModel: com.anymanga.viewmodel.HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = viewModelFactory)
+    val historyList by viewModel.historyItems.collectAsState()
 
     Scaffold(
         containerColor = BackgroundDark,
@@ -45,7 +46,7 @@ fun HistoryScreen(onMangaClick: (String, String) -> Unit) {
                 title = { Text(stringResource(R.string.history), fontWeight = FontWeight.Bold) },
                 actions = {
                     if (historyList.isNotEmpty()) {
-                        IconButton(onClick = { scope.launch { database.historyDao().clearHistory() } }) {
+                        IconButton(onClick = { viewModel.clearAllHistory() }) {
                             Icon(Icons.Default.Delete, contentDescription = "Clear All", tint = Color.White)
                         }
                     }
@@ -66,7 +67,7 @@ fun HistoryScreen(onMangaClick: (String, String) -> Unit) {
                     HistoryItem(
                         history = history,
                         onClick = { onMangaClick(history.mangaId, history.sourceId) },
-                        onDelete = { scope.launch { database.historyDao().deleteHistory(history.mangaId) } }
+                        onDelete = { viewModel.deleteHistory(history.mangaId) }
                     )
                 }
             }

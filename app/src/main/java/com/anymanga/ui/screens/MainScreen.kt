@@ -15,46 +15,51 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.anymanga.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.anymanga.R
 
 @Composable
 fun MainScreen(
+    settingsViewModel: com.anymanga.viewmodel.SettingsViewModel,
+    viewModelFactory: com.anymanga.viewmodel.ViewModelFactory,
     onMangaClick: (String, String) -> Unit,
-    onAddSourceClick: () -> Unit
+    onAddSourceClick: () -> Unit,
+    onNavigateToDiagnostics: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    val navigationItems = listOf(
+        NavigationItem(R.string.library, "library_tab", Icons.Default.LibraryBooks),
+        NavigationItem(R.string.updates, "updates_tab", Icons.Default.Update),
+        NavigationItem(R.string.history, "history_tab", Icons.Default.History),
+        NavigationItem(R.string.browse, "browse_tab", Icons.Default.Explore),
+        NavigationItem(R.string.more, "more_tab", Icons.Default.MoreHoriz)
+    )
+
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             NavigationBar(
-                containerColor = BackgroundDark.copy(alpha = 0.95f),
-                tonalElevation = 8.dp,
-                modifier = Modifier.height(72.dp)
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 3.dp
             ) {
-                val items = listOf(
-                    NavigationItem("Library", "library_tab", Icons.Default.LibraryBooks),
-                    NavigationItem("Updates", "updates_tab", Icons.Default.Update),
-                    NavigationItem("History", "history_tab", Icons.Default.History),
-                    NavigationItem("Browse", "browse_tab", Icons.Default.Explore),
-                    NavigationItem("More", "more_tab", Icons.Default.MoreHoriz)
-                )
-
-                items.forEach { item ->
+                navigationItems.forEach { item ->
                     val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                    val title = stringResource(item.titleRes)
+                    
                     NavigationBarItem(
                         icon = { 
                             Icon(
                                 item.icon, 
-                                contentDescription = item.title,
+                                contentDescription = title,
                                 modifier = Modifier.size(if (selected) 26.dp else 24.dp)
                             ) 
                         },
                         label = { 
                             Text(
-                                item.title, 
+                                title, 
                                 style = if (selected) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelSmall,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                             ) 
@@ -68,14 +73,7 @@ fun MainScreen(
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Primary,
-                            selectedTextColor = Primary,
-                            unselectedIconColor = TextGray,
-                            unselectedTextColor = TextGray,
-                            indicatorColor = Primary.copy(alpha = 0.12f)
-                        )
+                        }
                     )
                 }
             }
@@ -86,18 +84,29 @@ fun MainScreen(
             startDestination = "library_tab",
             modifier = Modifier.padding(padding)
         ) {
-            composable("library_tab") { LibraryScreen(onMangaClick = onMangaClick) }
-            composable("updates_tab") { HomeScreen(onMangaClick = onMangaClick) }
-            composable("history_tab") { HistoryScreen(onMangaClick = onMangaClick) }
+            composable("library_tab") { LibraryScreen(onMangaClick = onMangaClick, viewModelFactory = viewModelFactory) }
+            composable("updates_tab") { HomeScreen(onMangaClick = onMangaClick, viewModelFactory = viewModelFactory) }
+            composable("history_tab") { HistoryScreen(onMangaClick = onMangaClick, viewModelFactory = viewModelFactory) }
             composable("browse_tab") { 
                 SourcesCatalogScreen(
                     navController = navController,
-                    onAddSourceClick = onAddSourceClick 
+                    onAddSourceClick = onAddSourceClick,
+                    viewModelFactory = viewModelFactory
                 ) 
             }
-            composable("more_tab") { SettingsScreen(onBack = { navController.navigate("library_tab") }) }
+            composable("more_tab") { 
+                SettingsScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { navController.navigate("library_tab") },
+                    onNavigateToDiagnostics = onNavigateToDiagnostics
+                ) 
+            }
         }
     }
 }
 
-data class NavigationItem(val title: String, val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+data class NavigationItem(
+    val titleRes: Int, 
+    val route: String, 
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)

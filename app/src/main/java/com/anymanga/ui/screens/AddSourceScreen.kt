@@ -15,35 +15,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.navigation.NavController
-import com.anymanga.data.PreferencesManager
-import com.anymanga.data.AppDatabase
+import com.anymanga.data.*
 import com.anymanga.engine.TemplateResolver
-import com.anymanga.data.SourceTemplateEntity
-import com.anymanga.data.UserSourceEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSourceScreen(navController: NavController) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context) }
-    val resolver = remember { TemplateResolver(database.sourceDao()) }
-    val preferencesManager = remember { PreferencesManager(context) }
-
-    var urlInput by remember { mutableStateOf("") }
-    var detectedSource by remember { mutableStateOf<SourceTemplateEntity?>(null) }
-    var isResolving by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+fun AddSourceScreen(
+    navController: NavController,
+    viewModelFactory: com.anymanga.viewmodel.ViewModelFactory
+) {
+    val viewModel: com.anymanga.viewmodel.AddSourceViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = viewModelFactory)
+    val state by viewModel.state.collectAsState()
     
-    // Repository State
+    var urlInput by remember { mutableStateOf("") }
     var showRepoDialog by remember { mutableStateOf(false) }
-    var currentRepoUrl by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        currentRepoUrl = preferencesManager.userRepoUrl.first() ?: ""
+    LaunchedEffect(state.addComplete) {
+        if (state.addComplete) {
+            navController.popBackStack()
+            viewModel.resetAddComplete()
+        }
     }
 
     Scaffold(
@@ -53,6 +49,20 @@ fun AddSourceScreen(navController: NavController) {
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (state.repoUrl.isNotBlank()) {
+                        IconButton(
+                            onClick = { viewModel.syncRepository() },
+                            enabled = !state.isSyncing
+                        ) {
+                            if (state.isSyncing) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            } else {
+                                Icon(Icons.Default.Add, contentDescription = "Sync Repository", tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
                     }
                 }
             )
@@ -71,19 +81,34 @@ fun AddSourceScreen(navController: NavController) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Extension Repository",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Extension Repository",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        if (state.repoUrl.isNotBlank()) {
+                            TextButton(
+                                onClick = { viewModel.syncRepository() },
+                                enabled = !state.isSyncing
+                            ) {
+                                Text("Sync Now")
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (currentRepoUrl.isBlank()) "No repository configured" else "Current: ...${currentRepoUrl.takeLast(20)}",
-                        style = MaterialTheme.typography.bodySmall
+                        text = if (state.repoUrl.isBlank()) "No repository configured" else "Current: ...${state.repoUrl.takeLast(30)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = { showRepoDialog = true }) {
-                        Text(if (currentRepoUrl.isBlank()) "Add Repository" else "Change Repository")
+                        Text(if (state.repoUrl.isBlank()) "Add Repository" else "Change Repository")
                     }
                 }
             }
@@ -111,21 +136,11 @@ fun AddSourceScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {
-                    scope.launch {
-                        isResolving = true
-                        error = null
-                        detectedSource = resolver.resolve(urlInput)
-                        isResolving = false
-                        if (detectedSource == null) {
-                            error = "Could not detect source type. Please check the URL."
-                        }
-                    }
-                },
+                onClick = { viewModel.resolveSource(urlInput) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = urlInput.isNotBlank() && !isResolving
+                enabled = urlInput.isNotBlank() && !state.isResolving
             ) {
-                if (isResolving) {
+                if (state.isResolving) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary,
@@ -138,7 +153,7 @@ fun AddSourceScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            detectedSource?.let { source ->
+            state.detectedSource?.let { source ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -162,15 +177,7 @@ fun AddSourceScreen(navController: NavController) {
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Button(
-                            onClick = {
-                                scope.launch {
-                                    database.sourceDao().upsertTemplates(listOf(source))
-                                    database.sourceDao().setUserSource(
-                                        UserSourceEntity(domain = source.domain, enabled = true)
-                                    )
-                                    navController.popBackStack()
-                                }
-                            },
+                            onClick = { viewModel.addDetectedSource() },
                             modifier = Modifier.align(Alignment.End)
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
@@ -181,17 +188,78 @@ fun AddSourceScreen(navController: NavController) {
                 }
             }
 
-            error?.let {
+            state.error?.let {
                 Text(
                     text = it,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Available Sources List
+            Text(
+                text = "Available Sources",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val filteredTemplates = remember(state.allTemplates, urlInput) {
+                if (urlInput.isBlank()) state.allTemplates
+                else state.allTemplates.filter { 
+                    it.name.contains(urlInput, ignoreCase = true) || it.domain.contains(urlInput, ignoreCase = true)
+                }
+            }
+
+            if (filteredTemplates.isEmpty()) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (state.allTemplates.isEmpty()) "Sync your repository to see sources" else "No sources found",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(filteredTemplates) { source ->
+                        Card(
+                            onClick = {
+                                if (!state.isResolving) {
+                                    urlInput = source.domain
+                                    viewModel.resolveSource(source.domain)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isResolving
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(text = source.name, style = MaterialTheme.typography.bodyLarge)
+                                    Text(
+                                        text = "${source.engineType} • ${source.lang}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(Icons.Default.Add, contentDescription = "Select")
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         if (showRepoDialog) {
-            var tempUrl by remember { mutableStateOf(currentRepoUrl) }
+            var tempUrl by remember { mutableStateOf(state.repoUrl) }
             AlertDialog(
                 onDismissRequest = { showRepoDialog = false },
                 title = { Text("Set Repository URL") },
@@ -209,11 +277,8 @@ fun AddSourceScreen(navController: NavController) {
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        scope.launch {
-                            preferencesManager.setUserRepoUrl(tempUrl)
-                            currentRepoUrl = tempUrl
-                            showRepoDialog = false
-                        }
+                        viewModel.setRepoUrl(tempUrl)
+                        showRepoDialog = false
                     }) { Text("Save") }
                 },
                 dismissButton = {

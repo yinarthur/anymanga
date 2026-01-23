@@ -27,61 +27,43 @@ import com.anymanga.R
 import com.anymanga.data.AppDatabase
 import com.anymanga.engine.EngineRegistry
 import com.anymanga.model.Manga
-import com.anymanga.ui.theme.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryScreen(onMangaClick: (String, String) -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context) }
+fun LibraryScreen(
+    onMangaClick: (String, String) -> Unit,
+    viewModelFactory: com.anymanga.viewmodel.ViewModelFactory
+) {
+    val viewModel: com.anymanga.viewmodel.LibraryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = viewModelFactory)
+    val state by viewModel.state.collectAsState()
     
     var searchQuery by remember { mutableStateOf("") }
-    var searchResults by remember { mutableStateOf<List<Pair<String, Manga>>>(emptyList()) }
-    var isSearching by remember { mutableStateOf(false) }
     var showSearch by remember { mutableStateOf(false) }
     
-    // Perform search across all enabled sources
+    // Perform search
     val performSearch: () -> Unit = {
-        if (searchQuery.isNotEmpty()) {
-            scope.launch {
-                isSearching = true
-                try {
-                    val enabledSources = database.sourceDao().observeEnabledSources().first()
-                    val allResults = mutableListOf<Pair<String, Manga>>()
-                    
-                    enabledSources.forEach { source ->
-                        try {
-                            val engine = EngineRegistry.getEngineForTemplate(source)
-                            val results = engine.searchManga(source.baseUrl, searchQuery, 1)
-                            allResults.addAll(results.map { source.id to it })
-                        } catch (e: Exception) {
-                            // Skip failed sources
-                        }
-                    }
-                    searchResults = allResults
-                } catch (e: Exception) {
-                    // Handle error
-                } finally {
-                    isSearching = false
-                }
-            }
-        }
+        viewModel.search(searchQuery)
     }
-    
+
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.library), fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = { showSearch = !showSearch }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.White)
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = stringResource(R.string.search_action),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
@@ -93,44 +75,62 @@ fun LibraryScreen(onMangaClick: (String, String) -> Unit) {
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    placeholder = { Text("Search manga...", color = TextGray) },
+                    placeholder = { 
+                        Text(
+                            text = stringResource(R.string.search_placeholder),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ) 
+                    },
                     trailingIcon = {
                         TextButton(
                             onClick = performSearch,
-                            enabled = searchQuery.isNotEmpty() && !isSearching
+                            enabled = searchQuery.isNotEmpty() && state !is com.anymanga.viewmodel.LibraryViewModel.LibraryState.Searching
                         ) {
-                            Text("Search", color = if (searchQuery.isNotEmpty()) Primary else TextGray)
+                            Text(
+                                text = stringResource(R.string.search_action),
+                                color = if (searchQuery.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Primary,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
             }
             
-            when {
-                isSearching -> {
+            when (val libraryState = state) {
+                is com.anymanga.viewmodel.LibraryViewModel.LibraryState.Searching -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Primary)
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
-                searchResults.isNotEmpty() -> {
+                is com.anymanga.viewmodel.LibraryViewModel.LibraryState.Success -> {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
                         contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(searchResults) { (sourceId, manga) ->
+                        items(libraryState.results) { (sourceId, manga) ->
                             MangaGridItem(
                                 manga = manga,
                                 onClick = { onMangaClick(manga.url, sourceId) }
                             )
                         }
+                    }
+                }
+                is com.anymanga.viewmodel.LibraryViewModel.LibraryState.NoResults -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = stringResource(R.string.no_results), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                is com.anymanga.viewmodel.LibraryViewModel.LibraryState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = libraryState.message, color = MaterialTheme.colorScheme.error)
                     }
                 }
                 else -> {
@@ -148,13 +148,23 @@ fun EmptyLibrary() {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(24.dp)
         ) {
-            Icon(Icons.Default.LibraryBooks, null, tint = TextGray, modifier = Modifier.size(64.dp))
+            Icon(
+                imageVector = Icons.Default.LibraryBooks,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(64.dp)
+            )
             Spacer(Modifier.height(16.dp))
-            Text("Your Library is Empty", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = stringResource(R.string.empty_library_title),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Search for manga to add to your library",
-                color = TextGray,
+                text = stringResource(R.string.empty_library_subtitle),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -172,13 +182,13 @@ fun MangaGridItem(manga: Manga, onClick: () -> Unit) {
                 .fillMaxWidth()
                 .aspectRatio(0.7f)
                 .clip(RoundedCornerShape(12.dp))
-                .background(CardDark),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentScale = androidx.compose.ui.layout.ContentScale.Crop
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            manga.title,
-            color = TextWhite,
+            text = manga.title,
+            color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.labelMedium,
             maxLines = 2,
             lineHeight = 16.sp,

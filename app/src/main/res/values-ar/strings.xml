@@ -20,6 +20,8 @@
     <string name="reader">القارئ</string>
     <string name="downloads">التنزيلات</string>
     <string name="backup_restore">النسخ الاحتياطي والاستعادة</string>
+    <string name="chapters_count">الفصول (%1$d)</string>
+    <string name="unknown">غير معروف</string>
     <string name="advanced">متقدم</string>
     <string name="about">حول</string>
 </resources>

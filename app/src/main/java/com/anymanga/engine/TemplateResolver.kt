@@ -23,7 +23,10 @@ class TemplateResolver(
         if (normalizedDomain.isEmpty()) return null
 
         // 1. Seek in local DB
-        val existing = sourceDao.getAllTemplates().first().find { it.domain == normalizedDomain }
+        val templates = sourceDao.getAllTemplates().first()
+        val existing = templates.find { 
+            it.domain == normalizedDomain || it.name.contains(inputUrl, ignoreCase = true) 
+        }
         if (existing != null) return existing
 
         // 2. Auto-Detection

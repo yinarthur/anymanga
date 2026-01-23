@@ -22,3 +22,10 @@ __pycache__/
 # Build outputs
 *.apk
 *.aab
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
+nul
+build_log.txt

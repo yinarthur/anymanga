@@ -64,4 +64,7 @@ interface SourceDao {
 
     @Query("DELETE FROM source_templates WHERE id NOT IN (:currentIds)")
     suspend fun deleteOldTemplates(currentIds: List<String>)
+
+    @Query("SELECT COUNT(*) FROM source_templates")
+    suspend fun getTemplatesCount(): Int
 }

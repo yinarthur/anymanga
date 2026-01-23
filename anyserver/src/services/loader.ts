@@ -14,7 +14,7 @@ export class ExtensionLoader {
 
     async load() {
         try {
-            const dataPath = path.join(__dirname, '../../extensions/index.min.json');
+            const dataPath = path.join(__dirname, '../../extensions-index.json');
             const data = await fs.readFile(dataPath, 'utf-8');
             this.extensions = JSON.parse(data);
             this.buildIndex();

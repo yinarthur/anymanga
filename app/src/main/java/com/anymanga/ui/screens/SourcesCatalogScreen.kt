@@ -27,30 +27,16 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SourcesCatalogScreen(
-    navController: NavController,
+    navController: androidx.navigation.NavController,
+    viewModelFactory: com.anymanga.viewmodel.ViewModelFactory,
     onAddSourceClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val viewModel: com.anymanga.viewmodel.SourceCatalogViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = viewModelFactory)
     
-    val database = remember { AppDatabase.getDatabase(context) }
-    val preferencesManager = remember { PreferencesManager(context) }
-    val updater = remember { TemplatesUpdater(context, preferencesManager) }
-    val repository = remember { TemplateRepository(updater, database.sourceDao()) }
-    
-    val templatesWithStatus by repository.observeTemplatesWithStatus().collectAsState(initial = emptyList())
-    
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedLang by remember { mutableStateOf("All") }
-    
-    val languages = remember(templatesWithStatus) {
-        listOf("All") + templatesWithStatus.map { it.template.lang }.distinct().sorted()
-    }
-
-    val filteredSources = templatesWithStatus.filter { 
-        (searchQuery.isEmpty() || it.template.name.contains(searchQuery, ignoreCase = true) || it.template.domain.contains(searchQuery, ignoreCase = true)) &&
-        (selectedLang == "All" || it.template.lang == selectedLang)
-    }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedLang by viewModel.selectedLang.collectAsState()
+    val filteredSources by viewModel.sources.collectAsState()
+    val languages by viewModel.languages.collectAsState()
 
     Scaffold(
         containerColor = BackgroundDark,
@@ -79,7 +65,7 @@ fun SourcesCatalogScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                    onValueChange = { viewModel.setSearchQuery(it) },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(text = "Search sources...", color = TextGray) },
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = TextGray) },
@@ -99,7 +85,7 @@ fun SourcesCatalogScreen(
                         val isSelected = selectedLang == lang
                         FilterChip(
                             selected = isSelected,
-                            onClick = { selectedLang = lang },
+                            onClick = { viewModel.setSelectedLang(lang) },
                             label = { Text(text = lang.uppercase()) },
                             colors = FilterChipDefaults.filterChipColors(
                                 labelColor = TextGray,
@@ -128,9 +114,7 @@ fun SourcesCatalogScreen(
                         source = sourceWithStatus.template,
                         isEnabled = sourceWithStatus.userSource?.enabled == true,
                         onToggle = { enabled ->
-                            scope.launch {
-                                repository.setSourceEnabled(sourceWithStatus.template.domain, enabled)
-                            }
+                            viewModel.toggleSource(sourceWithStatus.template.domain, enabled)
                         }
                     )
                 }

@@ -23,6 +23,8 @@ class PreferencesManager(private val context: Context) {
         private val READING_MODE = stringPreferencesKey("reading_mode")
         private val DEFAULT_SOURCE = stringPreferencesKey("default_source")
         private val USER_REPO_URL = stringPreferencesKey("user_repo_url")
+        private val USE_LOCAL_SERVER = booleanPreferencesKey("use_local_server")
+        private val SERVER_URL = stringPreferencesKey("server_url")
         private val TEMPLATES_ETAG = stringPreferencesKey("templates_etag")
         private val LAST_TEMPLATES_UPDATE = androidx.datastore.preferences.core.longPreferencesKey("last_templates_update")
     }
@@ -101,6 +103,16 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    val useLocalServer: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[USE_LOCAL_SERVER] ?: false
+    }
+
+    suspend fun setUseLocalServer(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[USE_LOCAL_SERVER] = enabled
+        }
+    }
+
     val language: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[LANGUAGE] ?: "en"
     }
@@ -124,6 +136,16 @@ class PreferencesManager(private val context: Context) {
                 current.add(sourceId)
             }
             preferences[PINNED_SOURCES] = current.joinToString(",")
+        }
+    }
+
+    val serverUrl: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[SERVER_URL] ?: "https://anymanga-server-production-4f6b.up.railway.app/api/"
+    }
+
+    suspend fun setServerUrl(url: String) {
+        context.dataStore.edit { preferences ->
+            preferences[SERVER_URL] = url
         }
     }
 }

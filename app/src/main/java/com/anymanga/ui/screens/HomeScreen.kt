@@ -27,81 +27,76 @@ import com.anymanga.data.AppDatabase
 import com.anymanga.data.SourceTemplateEntity
 import com.anymanga.engine.EngineRegistry
 import com.anymanga.model.Manga
-import com.anymanga.ui.theme.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(onMangaClick: (String, String) -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context) }
-    
-    var updates by remember { mutableStateOf<List<Pair<SourceTemplateEntity, List<Manga>>>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var isRefreshing by remember { mutableStateOf(false) }
-    
-    val loadUpdates = suspend {
-        val enabledSources = database.sourceDao().observeEnabledSources().first()
-        val allUpdates = mutableListOf<Pair<SourceTemplateEntity, List<Manga>>>()
-        
-        enabledSources.forEach { source ->
-            try {
-                val engine = EngineRegistry.getEngineForTemplate(source)
-                val latest = engine.getLatestManga(source.baseUrl, 1)
-                if (latest.isNotEmpty()) {
-                    allUpdates.add(source to latest)
-                }
-            } catch (e: Exception) {
-                // Skip failed sources
-            }
-        }
-        updates = allUpdates
-    }
-
-    LaunchedEffect(Unit) {
-        isLoading = true
-        loadUpdates()
-        isLoading = false
-    }
+fun HomeScreen(
+    onMangaClick: (String, String) -> Unit,
+    viewModelFactory: com.anymanga.viewmodel.ViewModelFactory
+) {
+    val viewModel: com.anymanga.viewmodel.HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = viewModelFactory)
+    val state by viewModel.state.collectAsState()
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("Good Morning,", color = TextGray, style = MaterialTheme.typography.bodyLarge)
-                Text("Reader", color = TextWhite, style = MaterialTheme.typography.headlineLarge)
+                Text(
+                    text = stringResource(R.string.good_morning),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(R.string.reader_default_name),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     ) { padding ->
-        // Note: PullRefresh should be implemented here in a production app.
-        // For now, using a simple LazyColumn update flow.
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Primary)
-            } else if (updates.isEmpty()) {
-                EmptyHome()
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    updates.forEach { (source, mangaList) ->
-                        item {
-                            SectionHeader("${stringResource(R.string.updates)}: ${source.name}", Icons.Default.Star)
-                        }
-                        item {
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 24.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(mangaList) { manga ->
-                                    MangaCard(
-                                        manga = manga,
-                                        onClick = { onMangaClick(manga.url, source.id) }
-                                    )
-                                }
+            when (val homeState = state) {
+                is com.anymanga.viewmodel.HomeViewModel.HomeState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                is com.anymanga.viewmodel.HomeViewModel.HomeState.Empty -> {
+                    EmptyHome()
+                }
+                is com.anymanga.viewmodel.HomeViewModel.HomeState.Success -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        homeState.updates.forEach { (source, mangaList) ->
+                            item {
+                                SectionHeader(
+                                    title = "${stringResource(R.string.updates)}: ${source.name}",
+                                    icon = Icons.Default.Star
+                                )
                             }
-                            Spacer(Modifier.height(16.dp))
+                            item {
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 24.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    items(mangaList) { manga ->
+                                        MangaCard(
+                                            manga = manga,
+                                            onClick = { onMangaClick(manga.url, source.id) }
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(16.dp))
+                            }
                         }
+                    }
+                }
+                is com.anymanga.viewmodel.HomeViewModel.HomeState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = homeState.message, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -116,14 +111,24 @@ fun EmptyHome() {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(24.dp)
         ) {
-            Icon(Icons.Default.Extension, null, tint = TextGray, modifier = Modifier.size(64.dp))
+            Icon(
+                imageVector = Icons.Default.Extension,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(64.dp)
+            )
             Spacer(Modifier.height(16.dp))
-            Text("No Updates Found", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = stringResource(R.string.empty_home_title),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Enable sources in the Browse tab to see their latest updates here",
-                color = TextGray,
-                fontSize = 14.sp,
+                text = stringResource(R.string.empty_home_subtitle),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
@@ -142,11 +147,17 @@ fun MangaCard(manga: Manga, onClick: () -> Unit) {
                 .fillMaxWidth()
                 .height(200.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(CardDark),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentScale = androidx.compose.ui.layout.ContentScale.Crop
         )
         Spacer(Modifier.height(8.dp))
-        Text(manga.title, color = TextWhite, style = MaterialTheme.typography.titleMedium, maxLines = 2)
+        Text(
+            text = manga.title,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 2,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -156,8 +167,18 @@ fun SectionHeader(title: String, icon: androidx.compose.ui.graphics.vector.Image
         modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = Primary, modifier = Modifier.size(20.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
         Spacer(Modifier.width(8.dp))
-        Text(title, color = TextWhite, style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
     }
 }

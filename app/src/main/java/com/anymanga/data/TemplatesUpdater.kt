@@ -123,9 +123,10 @@ class TemplatesUpdater(
         return try {
             android.util.Log.d("TemplatesUpdater", "Mapping ${index.templates.size} templates to entities...")
             val entities = index.templates.map { template ->
+                val cleanName = template.name.replace("Tachiyomi ", "").replace("Tachiyomi", "").trim()
                 SourceTemplateEntity(
                     id = template.id,
-                    name = template.name,
+                    name = cleanName,
                     domain = template.domain,
                     baseUrl = template.baseUrl,
                     engineType = template.engineType,
@@ -184,5 +185,77 @@ class TemplatesUpdater(
         } catch (e: Exception) {
             null
         }
+    }
+
+    /**
+     * Loads templates from bundled assets.
+     * This is the fallback when no cached or remote templates are available.
+     */
+    fun loadBundledTemplates(): TemplatesIndex? {
+        return try {
+            android.util.Log.d("TemplatesUpdater", "Loading bundled templates from assets...")
+            val inputStream = context.assets.open("templates.min.json")
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            val index = json.decodeFromString<TemplatesIndex>(jsonString)
+            android.util.Log.d("TemplatesUpdater", "Loaded ${index.count} bundled templates")
+            index
+        } catch (e: Exception) {
+            android.util.Log.e("TemplatesUpdater", "Failed to load bundled templates: ${e.message}", e)
+            null
+        }
+    }
+
+    /**
+     * Ensures templates are available, loading from bundled assets if necessary.
+     * This should be called on app startup.
+     */
+    suspend fun ensureTemplatesAvailable(database: AppDatabase): Boolean {
+        android.util.Log.d("TemplatesUpdater", "Ensuring templates are available...")
+        
+        // Check if we already have templates in the database
+        val existingCount = database.sourceDao().getTemplatesCount()
+        if (existingCount > 0) {
+            android.util.Log.d("TemplatesUpdater", "Templates already in database: $existingCount")
+            return true
+        }
+        
+        // Try to load from local cache first
+        var index = getLocalTemplates()
+        
+        // If no local cache, load from bundled assets
+        if (index == null) {
+            android.util.Log.d("TemplatesUpdater", "No local cache, loading from bundled assets...")
+            index = loadBundledTemplates()
+        }
+        
+        // If we have templates, sync them to database
+        if (index != null) {
+            return try {
+                val entities = index.templates.map { template ->
+                    val cleanName = template.name.replace("Tachiyomi ", "").replace("Tachiyomi", "").trim()
+                    SourceTemplateEntity(
+                        id = template.id,
+                        name = cleanName,
+                        domain = template.domain,
+                        baseUrl = template.baseUrl,
+                        engineType = template.engineType,
+                        lang = template.lang,
+                        isNsfw = template.isNsfw,
+                        hasCloudflare = template.hasCloudflare,
+                        isDead = template.isDead,
+                        lastUpdate = System.currentTimeMillis()
+                    )
+                }
+                database.sourceDao().upsertTemplates(entities)
+                android.util.Log.d("TemplatesUpdater", "Successfully loaded ${entities.size} templates into database")
+                true
+            } catch (e: Exception) {
+                android.util.Log.e("TemplatesUpdater", "Failed to sync bundled templates to database: ${e.message}", e)
+                false
+            }
+        }
+        
+        android.util.Log.e("TemplatesUpdater", "Failed to load templates from any source")
+        return false
     }
 }

@@ -1,50 +1,43 @@
 package com.anymanga.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.anymanga.R
-import com.anymanga.data.PreferencesManager
-import com.anymanga.ui.theme.*
-import kotlinx.coroutines.launch
+import com.anymanga.model.ThemeMode
+import com.anymanga.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    val preferencesManager = remember { PreferencesManager(context) }
-    val scope = rememberCoroutineScope()
-    
-    val themeMode by preferencesManager.themeMode.collectAsState(initial = "dark")
-    val readingMode by preferencesManager.readingMode.collectAsState(initial = "ltr")
-    val language by preferencesManager.language.collectAsState(initial = "en")
-    
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
+    onNavigateToDiagnostics: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val settings = uiState.settings ?: return // Or show loading
+
     Scaffold(
-        containerColor = BackgroundDark,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.settings), fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
+                }
             )
         }
     ) { padding ->
@@ -52,297 +45,274 @@ fun SettingsScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp)
         ) {
+            // Appearance Section
             item {
-                Spacer(Modifier.height(16.dp))
-                SectionHeader(stringResource(R.string.general))
-            }
-            
-            item {
-                var expanded by remember { mutableStateOf(false) }
-                SettingsItem(
-                    icon = Icons.Default.Language,
-                    title = stringResource(R.string.language),
-                    subtitle = if (language == "ar") "العربية" else "English",
-                    onClick = { expanded = true }
-                )
-                
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("English") },
-                        onClick = {
-                            scope.launch { preferencesManager.setLanguage("en") }
-                            expanded = false
-                        }
+                SettingsSection(title = stringResource(R.string.appearance)) {
+                    ThemeSelector(
+                        currentMode = settings.themeMode,
+                        onModeSelected = { viewModel.setThemeMode(it) }
                     )
-                    DropdownMenuItem(
-                        text = { Text("العربية") },
-                        onClick = {
-                            scope.launch { preferencesManager.setLanguage("ar") }
-                            expanded = false
-                        }
+                    
+                    LanguageSelector(
+                        currentTag = settings.languageTag,
+                        onLanguageSelected = { viewModel.setLanguage(it) }
                     )
                 }
             }
-            
+
+            // Server Section
             item {
-                SettingsItem(
-                    icon = Icons.Default.Source,
-                    title = "Default Source",
-                    subtitle = "None selected",
-                    onClick = { /* TODO: Source picker */ }
-                )
-            }
-            
-            item {
-                Spacer(Modifier.height(24.dp))
-                SectionHeader(stringResource(R.string.appearance))
-            }
-            
-            item {
-                var expanded by remember { mutableStateOf(false) }
-                SettingsItem(
-                    icon = Icons.Default.Palette,
-                    title = stringResource(R.string.theme),
-                    subtitle = when (themeMode) {
-                        "light" -> "Light"
-                        "dark" -> "Dark"
-                        "amoled" -> "AMOLED"
-                        else -> "Dark"
-                    },
-                    onClick = { expanded = true }
-                )
-                
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Light") },
-                        onClick = {
-                            scope.launch { preferencesManager.setThemeMode("light") }
-                            expanded = false
+                SettingsSection(title = "Server") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = "Use Local Server", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                text = "Connect to localhost:3000 for live data",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = settings.useLocalServer,
+                            onCheckedChange = { viewModel.setUseLocalServer(it) }
+                        )
+                    }
+                    
+                    Spacer(Modifier.height(12.dp))
+                    
+                    var serverUrl by remember(settings.serverUrl) { mutableStateOf(settings.serverUrl) }
+                    
+                    OutlinedTextField(
+                        value = serverUrl,
+                        onValueChange = { serverUrl = it },
+                        label = { Text("Server URL") },
+                        placeholder = { Text("https://your-ngrok-url.ngrok.io/api/") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = settings.useLocalServer,
+                        trailingIcon = {
+                            IconButton(onClick = { viewModel.setServerUrl(serverUrl) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Save,
+                                    contentDescription = "Save"
+                                )
+                            }
                         }
                     )
-                    DropdownMenuItem(
-                        text = { Text("Dark") },
-                        onClick = {
-                            scope.launch { preferencesManager.setThemeMode("dark") }
-                            expanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("AMOLED") },
-                        onClick = {
-                            scope.launch { preferencesManager.setThemeMode("amoled") }
-                            expanded = false
-                        }
+                    
+                    Text(
+                        text = "Use Ngrok URL for testing or deploy to Render/Railway for permanent access",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
-            
+
+            // Repository Section
             item {
-                Spacer(Modifier.height(24.dp))
-                SectionHeader(stringResource(R.string.reader))
+                SettingsSection(title = stringResource(R.string.repository)) {
+                    var repoUrl by remember(settings.repositoryUrl) { mutableStateOf(settings.repositoryUrl) }
+                    
+                    OutlinedTextField(
+                        value = repoUrl,
+                        onValueChange = { repoUrl = it },
+                        label = { Text(stringResource(R.string.repository_url_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(onClick = { viewModel.setRepositoryUrl(repoUrl) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Save,
+                                    contentDescription = stringResource(R.string.save)
+                                )
+                            }
+                        }
+                    )
+                    
+                    Spacer(Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.templates_count, uiState.templatesCount),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            if (uiState.isSyncing) {
+                                Text(
+                                    text = stringResource(R.string.syncing),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
+                        Button(
+                            onClick = { viewModel.syncNow() },
+                            enabled = !uiState.isSyncing && settings.repositoryUrl.isNotBlank()
+                        ) {
+                            Text(stringResource(R.string.sync_now))
+                        }
+                    }
+                }
             }
-            
+
+            // Advanced Section
             item {
-                var expanded by remember { mutableStateOf(false) }
-                SettingsItem(
-                    icon = Icons.Default.MenuBook,
-                    title = "Reading Mode",
-                    subtitle = when (readingMode) {
-                        "ltr" -> "Left to Right"
-                        "rtl" -> "Right to Left"
-                        "vertical" -> "Vertical"
-                        "webtoon" -> "Webtoon"
-                        else -> "Left to Right"
-                    },
-                    onClick = { expanded = true }
-                )
-                
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Left to Right") },
-                        onClick = {
-                            scope.launch { preferencesManager.setReadingMode("ltr") }
-                            expanded = false
-                        }
+                SettingsSection(title = stringResource(R.string.advanced)) {
+                    SettingsActionItem(
+                        icon = Icons.Default.Assessment,
+                        title = stringResource(R.string.diagnostics),
+                        subtitle = stringResource(R.string.diagnostics_subtitle),
+                        onClick = onNavigateToDiagnostics
                     )
-                    DropdownMenuItem(
-                        text = { Text("Right to Left") },
-                        onClick = {
-                            scope.launch { preferencesManager.setReadingMode("rtl") }
-                            expanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Vertical") },
-                        onClick = {
-                            scope.launch { preferencesManager.setReadingMode("vertical") }
-                            expanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Webtoon") },
-                        onClick = {
-                            scope.launch { preferencesManager.setReadingMode("webtoon") }
-                            expanded = false
-                        }
+                    
+                    SettingsActionItem(
+                        icon = Icons.Default.Delete,
+                        title = stringResource(R.string.clear_cache),
+                        subtitle = stringResource(R.string.clear_cache_subtitle),
+                        onClick = { /* TODO: Implement clear */ }
                     )
                 }
             }
-            
+
+            // About Section
             item {
-                SettingsItem(
-                    icon = Icons.Default.ZoomIn,
-                    title = "Zoom Start Position",
-                    subtitle = "Automatic",
-                    onClick = { /* TODO: Zoom settings */ }
-                )
+                SettingsSection(title = stringResource(R.string.about)) {
+                    Text(
+                        text = stringResource(R.string.app_name) + " v1.0.0",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(R.string.built_with_ai),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            
-            item {
-                Spacer(Modifier.height(24.dp))
-                SectionHeader(stringResource(R.string.downloads))
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Folder,
-                    title = "Download Location",
-                    subtitle = "/storage/emulated/0/AnyManga",
-                    onClick = { /* TODO: Folder picker */ }
-                )
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Image,
-                    title = "Image Quality",
-                    subtitle = "High",
-                    onClick = { /* TODO: Quality picker */ }
-                )
-            }
-            
-            item {
-                Spacer(Modifier.height(24.dp))
-                SectionHeader(stringResource(R.string.backup_restore))
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Backup,
-                    title = "Create Backup",
-                    subtitle = "Export library and settings",
-                    onClick = { /* TODO: Create backup */ }
-                )
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Restore,
-                    title = "Restore Backup",
-                    subtitle = "Import from file",
-                    onClick = { /* TODO: Restore backup */ }
-                )
-            }
-            
-            item {
-                Spacer(Modifier.height(24.dp))
-                SectionHeader(stringResource(R.string.advanced))
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Delete,
-                    title = "Clear Cache",
-                    subtitle = "Free up storage space",
-                    onClick = { /* TODO: Clear cache */ }
-                )
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.DeleteForever,
-                    title = "Clear Database",
-                    subtitle = "Reset all data",
-                    onClick = { /* TODO: Clear database */ },
-                    textColor = Color.Red
-                )
-            }
-            
-            item {
-                Spacer(Modifier.height(24.dp))
-                SectionHeader(stringResource(R.string.about))
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Info,
-                    title = "Version",
-                    subtitle = "2.4.0",
-                    onClick = { }
-                )
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Code,
-                    title = "GitHub",
-                    subtitle = "View source code",
-                    onClick = { /* TODO: Open GitHub */ }
-                )
-            }
-            
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Gavel,
-                    title = "Licenses",
-                    subtitle = "Open source licenses",
-                    onClick = { /* TODO: Show licenses */ }
-                )
-            }
-            
-            item {
-                Spacer(Modifier.height(24.dp))
+        }
+    }
+
+    // Handle feedback
+    LaunchedEffect(uiState.error, uiState.successMessage) {
+        // Here we could show a Snackbar if we had a ScaffoldState
+    }
+}
+
+@Composable
+fun SettingsSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                content()
             }
         }
     }
 }
 
 @Composable
-fun SectionHeader(title: String) {
-    Text(
-        title.uppercase(),
-        color = Primary,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = 1.sp,
-        modifier = Modifier.padding(vertical = 8.dp)
-    )
+fun ThemeSelector(
+    currentMode: ThemeMode,
+    onModeSelected: (ThemeMode) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    Box {
+        SettingsActionItem(
+            icon = Icons.Default.Palette,
+            title = "Theme",
+            subtitle = currentMode.name.lowercase().capitalize(),
+            onClick = { expanded = true }
+        )
+        
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            ThemeMode.values().forEach { mode ->
+                DropdownMenuItem(
+                    text = { Text(mode.name.lowercase().capitalize()) },
+                    onClick = {
+                        onModeSelected(mode)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable
-fun SettingsItem(
+fun LanguageSelector(
+    currentTag: String,
+    onLanguageSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    Box {
+        SettingsActionItem(
+            icon = Icons.Default.Language,
+            title = "Language",
+            subtitle = if (currentTag == "ar") "العربية" else "English",
+            onClick = { expanded = true }
+        )
+        
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("English") },
+                onClick = {
+                    onLanguageSelected("en")
+                    expanded = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("العربية") },
+                onClick = {
+                    onLanguageSelected("ar")
+                    expanded = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingsActionItem(
     icon: ImageVector,
     title: String,
     subtitle: String,
-    onClick: () -> Unit,
-    textColor: Color = Color.White
+    onClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        color = Color.Transparent
+        onClick = onClick,
+        color = androidx.compose.ui.graphics.Color.Transparent
     ) {
         Row(
             modifier = Modifier
@@ -353,32 +323,27 @@ fun SettingsItem(
             Icon(
                 icon,
                 contentDescription = null,
-                tint = Primary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
-            
             Spacer(Modifier.width(16.dp))
-            
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title,
-                    color = textColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    subtitle,
-                    color = TextGray,
-                    fontSize = 14.sp
-                )
+                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                if (subtitle.isNotBlank()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            
             Icon(
                 Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = TextGray,
-                modifier = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
         }
     }
 }
+
+fun String.capitalize() = this.replaceFirstChar { it.uppercase() }
